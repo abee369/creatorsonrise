@@ -25,34 +25,49 @@ to_file_row = IO.readlines("log.out")[2].to_i
 # puts(archive_row)
 
 puts(ws.num_rows)
-ws_archive[archive_row,1] = Time.now.strftime('%Y-%m-%d')
-ws_archive[archive_row,2] = Time.now.strftime('%H:%M:%S %Z')
+ws_archive[archive_row,1] = DateTime.now.in_time_zone('Central Time (US & Canada)').strftime('%Y-%m-%d')
+ws_archive[archive_row,2] = DateTime.now.in_time_zone('Central Time (US & Canada)').strftime('%H:%M:%S %Z')
+
 
 for i in 3..ws.num_rows.to_i
-	if ws[i,15] == 'done'
-		channel = Yt::Channel.new id: ws[i,2]
-		ws[i,12] = channel.subscriber_count.to_s.reverse.scan(/\d{1,3}/).join(",").reverse
-		ws[i,13] = channel.video_count.to_s.reverse.scan(/\d{1,3}/).join(",").reverse
-		ws_archive[archive_row,i] = channel.subscriber_count.to_s.reverse.scan(/\d{1,3}/).join(",").reverse  #
+	if ws[i,17] == "yes"
+		if ws[i,15] == 'done'
+			channel = Yt::Channel.new id: ws[i,2]
+			ws[i,12] = channel.subscriber_count.to_s.reverse.scan(/\d{1,3}/).join(",").reverse
+			ws[i,13] = channel.video_count.to_s.reverse.scan(/\d{1,3}/).join(",").reverse
+			ws_archive[archive_row,i] = channel.subscriber_count.to_s.reverse.scan(/\d{1,3}/).join(",").reverse  #
+		else
+
+			channel = Yt::Channel.new id: ws[i,2]
+			ws[i,9] = channel.title
+			ws[i,10] = "<img src= \"#{channel.thumbnail_url}\">"
+			ws[i,11] = "<a href= \"#{ws[i,3]}\"target=\"_blank\">#{ws[i,9]}</a>"
+			ws[i,12] = channel.subscriber_count.to_s.reverse.scan(/\d{1,3}/).join(",").reverse
+			ws[i,13] = channel.video_count.to_s.reverse.scan(/\d{1,3}/).join(",").reverse
+			ws[i,14] = ws[i-1,14].to_i+1
+
+			col = ws[i,14].to_i+2
+			ws_archive[1,col] = ws[i,2] #the three increments
+			ws_archive[2,col] = ws[i,9]
+			ws_archive[3,col] = ws[i,3]
+			ws_archive[archive_row,i] = channel.subscriber_count.to_s.reverse.scan(/\d{1,3}/).join(",").reverse  #
+
+			# client.update("Today's Creator on the Rise is #{ws[i,9]} #{ws[i,16]}")
+			ws[i,15] = 'done'
+		end
 	else
+		if ws[i,15] != 'done'
+			col = ws[i,14].to_i+2
+			ws[i,14] = ws[i-1,14].to_i+1
+			ws[i,11] = "<a href= \"https://twitter.com/CreatorOnRise\"target=\"_blank\">If you know who it was tweet at me!</a>"
+			ws_archive[1,col] = ws[i,2] #the three increments
+			ws_archive[2,col] = ws[i,9]
+			ws_archive[3,col] = ws[i,3]
+			ws[i,15] = 'done'
 
-		channel = Yt::Channel.new id: ws[i,2]
-		ws[i,9] = channel.title
-		ws[i,10] = "<img src= \"#{channel.thumbnail_url}\">"
-		ws[i,11] = "<a href= \"#{ws[i,3]}\"target=\"_blank\">#{ws[i,9]}</a>"
-		ws[i,12] = channel.subscriber_count.to_s.reverse.scan(/\d{1,3}/).join(",").reverse
-		ws[i,13] = channel.video_count.to_s.reverse.scan(/\d{1,3}/).join(",").reverse
-		ws[i,14] = ws[i-1,14].to_i+1
-
-		col = ws[i,14].to_i+2
-		ws_archive[1,col] = ws[i,2] #the three increments
-		ws_archive[2,col] = ws[i,9]
-		ws_archive[3,col] = ws[i,3]
-		ws_archive[archive_row,i] = channel.subscriber_count.to_s.reverse.scan(/\d{1,3}/).join(",").reverse  #
-
-		# client.update("Today's Creator on the Rise is #{ws[i,9]} #{ws[i,16]}")
-		ws[i,15] = 'done'
+		end
 	end
+
 end
 
 time = Time.new
