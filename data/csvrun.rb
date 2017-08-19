@@ -23,5 +23,5 @@ CSV.open("data.csv", "w") do |csv|
 end
 
 open('date.txt', 'w') do |f|
-	  f<< Time.now.strftime('%Y-%m-%d %H:%M:%S %Z')
+	f<< DateTime.now.in_time_zone('Central Time (US & Canada)').strftime('%Y-%m-%d %H:%M:%S %Z')
 end
